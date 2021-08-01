@@ -23,12 +23,12 @@ def learn_dict(rows, cols, non_zeros, b):
     # Code book update stage for a single atom. [Loop it up after one iteration]
     error = 10
     while error >= 0.01:
-        for kdx in range(cols-1):
+        for kdx in range(cols):
 
-            w_k = [idx for idx in range(samples) if X_hat[0,idx] != 0]      # Gives the indices of the atoms that use atom 0
-            # What if w_k is a null matrix?
+            w_k = [idx for idx in range(samples) if X_hat[kdx,idx] != 0]      # Gives the indices of the atoms that
+            # use atom kdx
 
-            # Defining Omega_k matrix for Atom 0
+            # Defining Omega_k matrix for Atom kdx
 
             omega_k = np.zeros((samples, len(w_k)))   # [samples, len(w_k)]
 
@@ -46,19 +46,20 @@ def learn_dict(rows, cols, non_zeros, b):
             for idx in range(cols-1):
                 if idx != 0:
                     temp += np.matmul(dictionary[:, idx: idx+1], X_hat[idx:idx+1, :])
-            E = b - temp  # (20,10)
+            E = b - temp                    # (20,10)
             E_k = np.matmul(E, omega_k)     # (20, |w_k|)
 
             U, S, V = LA.svd(E_k)
 
             dictionary[:, idx:idx+1] = U[:, 0:1]
-            X_hat_k = V[:, 0:1]*S[0]    # Potential Index error
+            X_hat_k = V[:, 0:1]*S[0]
 
         # Compute the error
 
-        # for idx in range(samples):
-        #     new_X_hat = omp(non_zeros, dictionary, b[:, idx])
-        #     X_hat = np.concatenate((X_hat, new_X_hat), axis=1)  # (30, 10)
+
+
+
+# Share with:
 
 
 
