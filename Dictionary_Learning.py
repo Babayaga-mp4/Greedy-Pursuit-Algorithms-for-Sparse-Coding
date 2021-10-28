@@ -1,12 +1,32 @@
 import numpy as np
 from numpy import linalg as LA
 from scipy.sparse import rand
-from OMP import omp
+import matplotlib.pyplot as plt
+
+def omp (k, A, b):
+    r_prev = b
+    i = 0
+    cols = A.shape[1]
+    rows = A.shape[0]
+    A_reduced = np.empty((rows, 0))
+    X = np.zeros((cols, 1))
+    s = []
+    while i < k:
+        Arr = abs(np.matmul(A.T, r_prev ))
+        next_col = np.where(Arr == np.amax(Arr))[0]
+        s.append(next_col.tolist()[0])
+        A_reduced = np.column_stack((A_reduced, (A[:, next_col])))
+        Xs = np.matmul((np.linalg.pinv(A_reduced)), b)
+        X[s] = Xs
+        b_hat = np.matmul(A, X)
+        r_prev = b - b_hat
+        i += 1
+    return X
 
 
 def learn_dict(rows, cols, non_zeros, b, *args):
     samples = b.shape[1]
-    num_iter = 10
+    num_iter = 20
 
     if args != ():
         input_variance = args[0]
@@ -57,9 +77,7 @@ def learn_dict(rows, cols, non_zeros, b, *args):
             error = (LA.norm(residual) ** 2) / samples
 
         counter += 1
-
-    print(error)
-
+    # print(error)
     if error < input_variance: print('Yes', error, input_variance)
     return dictionary
 
@@ -67,42 +85,50 @@ def learn_dict(rows, cols, non_zeros, b, *args):
 if __name__ == '__main__':
     rows = 20
     cols = 30
-    non_zeros = 5
-    n_samples = 10
-
+    non_zeros = 3
+    n_samples = 100
+    recovered = []
     # Dictionary
-    A = np.random.randn(rows, cols)
-    for i in range(cols):
-        A[:, i] = A[:, i] / LA.norm(A[:, i])
-    # print(A)
 
-    # Expected Sparse Signals
-    X = rand(cols, n_samples,
-             density=non_zeros / cols).todense()
+    for SNR in range(0, 50, 5):
+      for idx in range(100):
+        A = np.random.randn(rows, cols)
+        for i in range(cols):
+            A[:, i] = A[:, i] / LA.norm(A[:, i])
+        # print(A)
 
-    # Y
-    b = A * X
-    SNR = 50
-    variance = (LA.norm(b) ** 2 / rows * n_samples) / (10 ** (SNR / 10))
-    n = np.random.randn(rows, 1) * np.sqrt(variance)
-    b_n = b + n
 
-    # Testing
 
-    learned_dict = learn_dict(rows, cols, non_zeros, b_n, variance)  # update To Variance
-    counter = 0
+        # Expected Sparse Signals
+        X = rand(cols, n_samples,
+                density=non_zeros / cols).todense()
 
-    for mdx in range(cols):
-        d = A[:, mdx]
-        for ndx in range(cols):
+        # Y
+        b = A * X
+        # SNR = 10
+        variance = (LA.norm(b) ** 2 / rows * n_samples) / (10 ** (SNR / 10))
+        n = np.random.randn(rows, 1) * np.sqrt(variance)
+        b_n = b + n
+
+        # Testing
+
+        learned_dict = learn_dict(rows, cols, non_zeros, b_n, variance) #update To Variance
+        counter = 0
+
+        for mdx in range(cols):
+          d = A[:, mdx]
+          for ndx in range(cols):
             dt = learned_dict[:, ndx]
             s = np.matmul(d.T, dt)
             # print(s)
-            if s >= 0.65:
-                counter += 1
-                break
-    print(counter)
-    print('variance:', variance)
-    residual = b_n - np.matmul(A, X)
-    error = (LA.norm(residual) ** 2) / n_samples
-    print(error)
+            if abs(s) >= 0.5:
+              counter += 1
+              break
+        # print(counter)
+        # print('variance:', variance)
+        residual = b_n - np.matmul(A, X)
+        error = (LA.norm(residual) ** 2)/(rows*n_samples)
+      recovered.append(counter/100)
+        # print(error)
+    plt.plot([idx for idx in range(0, 50, 5)], recovered)
+    plt.show()

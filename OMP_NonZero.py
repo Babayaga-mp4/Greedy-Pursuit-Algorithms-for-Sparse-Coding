@@ -41,20 +41,32 @@ if __name__ == '__main__':
     for i in range(cols):
         A[:, i] = A[:, i] / LA.norm(A[:, i])
 
-    k, abs_error = 3, []
-    for counter in range(0, 50, 5):
-        error = 0
+    abs_error = []
+    # k = 3
+    SNR, hamming_distance = 50, []
+    for counter in range(10):
+        error, h_dist = 0, 0
         for idx in range(1000):
+            k = counter
             X = rand(cols, 1,
                      density=k / cols).todense()
             b = np.matmul(A, X)
-            SNR = counter
             variance = (LA.norm(b) ** 2 / rows) / (10 ** (SNR / 10))
             n = np.random.randn(rows, 1) * np.sqrt(variance)
             b_n = b + n
             X_hat = omp(A, b_n, variance, k)
             b_hat = np.matmul(A, X_hat)
+            # X_hat_ham, X_ham = np.zeros((cols, 1)), np.zeros((cols, 1))
+            # for kdx in range(cols):
+            #     if X_hat[kdx] != 0:
+            #         X_hat_ham[kdx] = 1
+            #     elif X[kdx] != 0:
+            #         X_ham[kdx] = 1
+            # h_dist += distance.hamming(X_ham, X_hat_ham) / 1000
             error += (LA.norm(b - b_hat) ** 2) / (1000 * rows)
         abs_error.append(error)
-    plt.plot([idx for idx in range(0, 50, 5)], abs_error)
+        # hamming_distance.append(h_dist)
+    # plt.plot([idx for idx in range(0, 50, 5)], abs_error)
+    # plt.plot([idx for idx in range(30)], hamming_distance)
+    plt.plot([idx for idx in range(10)], abs_error)
     plt.show()
