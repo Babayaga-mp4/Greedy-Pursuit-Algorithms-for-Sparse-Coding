@@ -15,7 +15,7 @@ def omp (k, A, b):
         Arr = abs(np.matmul(A.T, r_prev ))
         next_col = np.where(Arr == np.amax(Arr))[0]
         s.append(next_col.tolist()[0])
-        A_reduced = np.column_stack((A_reduced, (A[:, next_col])))
+        A_reduced = np.column_stack((A_reduced, (A[:, next_col[0]])))
         Xs = np.matmul((np.linalg.pinv(A_reduced)), b)
         X[s] = Xs
         b_hat = np.matmul(A, X)
@@ -38,12 +38,12 @@ def learn_dict(rows, cols, non_zeros, b, *args):
     for idx in range(cols):
         dictionary[:, idx] = dictionary[:, idx] / LA.norm(dictionary[:, idx])  # (20, 30)
 
-    counter = 0
+    iter_counter = 0
     error = float('inf')  # Make Infinity
 
-    while counter < num_iter:
+    while iter_counter < num_iter:
 
-        # while error > c*input_variance:
+    # while error > c*input_variance:
 
         # Sparse Coding
 
@@ -76,59 +76,65 @@ def learn_dict(rows, cols, non_zeros, b, *args):
             residual = b - np.matmul(dictionary, X_hat)
             error = (LA.norm(residual) ** 2) / samples
 
-        counter += 1
-    # print(error)
+        iter_counter += 1
+    # print(iter_counter)
     if error < input_variance: print('Yes', error, input_variance)
     return dictionary
 
 
 if __name__ == '__main__':
-    rows = 20
-    cols = 30
-    non_zeros = 3
+    rows = 300
+    cols = 600
+    non_zeros = 4
     n_samples = 100
-    recovered = []
     # Dictionary
-
-    for SNR in range(0, 50, 5):
-      for idx in range(100):
-        A = np.random.randn(rows, cols)
-        for i in range(cols):
-            A[:, i] = A[:, i] / LA.norm(A[:, i])
-        # print(A)
-
-
-
-        # Expected Sparse Signals
-        X = rand(cols, n_samples,
-                density=non_zeros / cols).todense()
-
-        # Y
-        b = A * X
-        # SNR = 10
-        variance = (LA.norm(b) ** 2 / rows * n_samples) / (10 ** (SNR / 10))
-        n = np.random.randn(rows, 1) * np.sqrt(variance)
-        b_n = b + n
-
-        # Testing
-
-        learned_dict = learn_dict(rows, cols, non_zeros, b_n, variance) #update To Variance
+    # SNR = 50
+    fina = []
+    for SNR in range(10, 30, 5):
+        print(SNR)
+        recovered = []
         counter = 0
+        for idx in range(10):
 
-        for mdx in range(cols):
-          d = A[:, mdx]
-          for ndx in range(cols):
-            dt = learned_dict[:, ndx]
-            s = np.matmul(d.T, dt)
-            # print(s)
-            if abs(s) >= 0.5:
-              counter += 1
-              break
-        # print(counter)
-        # print('variance:', variance)
-        residual = b_n - np.matmul(A, X)
-        error = (LA.norm(residual) ** 2)/(rows*n_samples)
-      recovered.append(counter/100)
-        # print(error)
-    plt.plot([idx for idx in range(0, 50, 5)], recovered)
+            A = np.random.randn(rows, cols)
+            for i in range(cols):
+                A[:, i] = A[:, i] / LA.norm(A[:, i])
+            # print(A)
+
+
+
+            # Expected Sparse Signals
+            X = rand(cols, n_samples,
+                    density=non_zeros / cols).todense()
+
+            # Y
+            b = A * X
+            # SNR = 10
+            variance = (LA.norm(b) ** 2 / rows * n_samples) / (10 ** (SNR / 10))
+            n = np.random.randn(rows, 1) * np.sqrt(variance)
+            b_n = b + n
+
+            # Testing
+
+            learned_dict = learn_dict(rows, cols, non_zeros, b_n, variance)
+
+            for mdx in range(cols):
+              d = A[:, mdx]
+              for ndx in range(cols):
+                dt = learned_dict[:, ndx]
+                s = abs(np.matmul(d.T, dt))
+                # print(s)
+                if s >= 0.9:
+                  counter += 1
+                  break
+            # print('counter:', counter/10)
+            # print('variance:', variance)
+            residual = b_n - np.matmul(A, X)
+            error = (LA.norm(residual) ** 2)/(rows*n_samples)
+            recovered.append(counter/10)
+        print(recovered)
+        fina.append(counter/10)
+        print(fina)
+        # print(sum(recovered))
+    plt.plot([idx for idx in range(10, 30, 5)], fina)
     plt.show()
