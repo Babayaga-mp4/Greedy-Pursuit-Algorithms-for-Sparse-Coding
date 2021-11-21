@@ -18,12 +18,10 @@ X = np.zeros((cols, n_samples * N))
 
 for idx in range(0, N, n_samples):
     index = random.choices(range(0,cols), k=k)
-    spcoeffs = np.random.rand(k, n_samples)
-    X[index, idx: idx+n_samples] = spcoeffs
+    X[index, idx: idx+n_samples] = np.random.rand(k, n_samples)
 
 Y = np.matmul(A, X)
 
-counter = 1
 abs_error_omp, abs_error_somp = [], []
 
 for SNR in range(0, 55, 5):

@@ -17,7 +17,7 @@ for counter in range(0, 50, 5):
         X = rand(cols, 1,
                  density = k / cols).todense()
         b = np.matmul(A, X)
-        SNR = counter
+        SNR = 40
         variance = (LA.norm(b) ** 2 / rows) / (10 ** (SNR / 10))
         n = np.random.randn(rows, 1) * np.sqrt(variance)
         b_n = b + n
